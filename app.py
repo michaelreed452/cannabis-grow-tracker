@@ -7,6 +7,36 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 import io
 
+# === USERNAME + PASSWORD + TRACKS WHO IS LOGGED IN ===
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if st.session_state.user is None:
+    col1, col2 = st.columns(2)
+    with col1:
+        username = st.text_input("Username")
+    with col2:
+        password = st.text_input("Password", type="password")
+    
+    if st.button("Login"):
+        # ← add as many users as you want here
+        valid_users = {
+            "Michael": "KATVIS",
+            "Fanie":   "GhostOG420", 
+            # add more lines like this ↓
+            # "sarah":   "herpassword",
+        }
+        if username in valid_users and valid_users[username] == password:
+            st.session_state.user = username
+            st.success(f"Welcome {username}!")
+            st.rerun()
+        else:
+            st.error("Wrong username or password")
+    st.stop()
+
+# Shows who is logged in at the top of the sidebar
+st.sidebar.success(f"Logged in as **{st.session_state.user.upper()}**")
+
 st.set_page_config(page_title="Cannabis Grow Tracker", layout="wide", page_icon="Cannabis")
 
 # ===================== INITIALISE DATA =====================
