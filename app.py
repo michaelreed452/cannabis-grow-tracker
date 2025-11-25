@@ -39,7 +39,7 @@ st.sidebar.success(f"Logged in as **{st.session_state.user.upper()}**")
 
 st.set_page_config(
     page_title="Grow Tracker",
-    page_icon="https://em-content.zobj.net/source/apple/391/seedling_1f331.png",  # real green leaf
+    page_icon="https://raw.githubusercontent.com/michaelreed452/cannabis-grow-tracker/main/leaf.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
