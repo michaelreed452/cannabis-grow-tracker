@@ -287,19 +287,16 @@ elif page == "Export to Excel":
         st.success("File ready!")
 
 # ===================== FOOTER =====================
-# === FINAL FOOTER – PERFECT IN LIGHT & DARK MODE (NO THEME BUG) ===
+# === FINAL FOOTER – WORKS 100% IN LIGHT & DARK MODE ===
 st.markdown("---")
-
-with st.container():
-    footer_col1, footer_col2, footer_col3, footer_col4, footer_col5 = st.columns(5)
-    with footer_col1:
-        st.markdown(f"<p style='text-align:center; margin:0;'><b>Plants</b><br>{len(st.session_state.plants)}</p>", unsafe_allow_html=True)
-    with footer_col2:
-        st.markdown(f"<p style='text-align:center; margin:0;'><b>Strains</b><br>{len(st.session_state.strains)}</p>", unsafe_allow_html=True)
-    with footer_col3:
-        st.markdown(f"<p style='text-align:center; margin:0;'><b>Expenses</b><br>{len(st.session_state.expenses)}</p>", unsafe_allow_html=True)
-    with footer_col4:
-        st.markdown(f"<p style='text-align:center; margin:0;'><b>Income</b><br>{len(st.session_state.income)}</p>", unsafe_allow_html=True)
-    with footer_col5:
-        st.markdown(f"<p style='text-align:center; margin:0;'><b>Stock</b><br>{len(st.session_state.stock)}</p>", unsafe_allow_html=True)
-)
+c1, c2, c3, c4, c5 = st.columns(5)
+with c1:
+    st.markdown(f"<div style='text-align:center'><b>Plants</b><br>{len(st.session_state.plants)}</div>", unsafe_allow_html=True)
+with c2:
+    st.markdown(f"<div style='text-align:center'><b>Strains</b><br>{len(st.session_state.strains)}</div>", unsafe_allow_html=True)
+with c3:
+    st.markdown(f"<div style='text-align:center'><b>Expenses</b><br>{len(st.session_state.expenses)}</div>", unsafe_allow_html=True)
+with c4:
+    st.markdown(f"<div style='text-align:center'><b>Income</b><br>{len(st.session_state.income)}</div>", unsafe_allow_html=True)
+with c5:
+    st.markdown(f"<div style='text-align:center'><b>Stock</b><br>{len(st.session_state.stock)}</div>", unsafe_allow_html=True)
