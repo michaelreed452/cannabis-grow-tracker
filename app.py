@@ -287,14 +287,30 @@ elif page == "Export to Excel":
         st.success("File ready!")
 
 # ===================== FOOTER =====================
-# === CLEAN FOOTER AT BOTTOM ===
+# === PERFECT FOOTER THAT AUTO-ADAPTS TO LIGHT & DARK MODE ===
 st.markdown("---")
-st.markdown(f"""
-<div style="text-align: center; background-color: #f0f2f6; padding: 15px; border-radius: 10px;">
-    🏠 <b>Plants:</b> {len(st.session_state.plants)} ┃ 
-    🌱 <b>Strains:</b> {len(st.session_state.strains)} ┃ 
-    💰 <b>Expenses:</b> {len(st.session_state.expenses)} ┃ 
-    💵 <b>Income:</b> {len(st.session_state.income)} ┃ 
-    📦 <b>Stock:</b> {len(st.session_state.stock)}
-</div>
-""", unsafe_allow_html=True)
+footer_bg = "rgba(240, 242, 246, 0.8)" if st.get_option("theme.backgroundColor") == "white" else "rgba(30, 30, 30, 0.8)"
+footer_text = "#000000" if st.get_option("theme.backgroundColor") == "white" else "#ffffff"
+
+st.markdown(
+    f"""
+    <div style="
+        text-align: center;
+        background-color: {footer_bg};
+        padding: 18px;
+        border-radius: 12px;
+        font-size: 17px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+    ">
+        <span style="color: {footer_text};">
+            Dashboard Plants: <b>{len(st.session_state.plants)}</b> ┃ 
+            Strains: <b>{len(st.session_state.strains)}</b> ┃ 
+            Expenses: <b>{len(st.session_state.expenses)}</b> ┃ 
+            Income: <b>{len(st.session_state.income)}</b> ┃ 
+            Stock: <b>{len(st.session_state.stock)}</b>
+        </span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
