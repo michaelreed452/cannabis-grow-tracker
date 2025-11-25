@@ -287,16 +287,17 @@ elif page == "Export to Excel":
         st.success("File ready!")
 
 # ===================== FOOTER =====================
-# === FINAL FOOTER WITH EMOJIS – THIS ONE REALLY SHOWS THEM ===
+# === FINAL FOOTER WITH EMOJIS – GUARANTEED TO SHOW ===
 st.markdown("---")
-c1, c2, c3, c4, c5 = st.columns(5)
-with c1:
-    st.markdown(f"<div style='text-align:center'>Plants<br><b>{len(st.session_state.plants)}</b></div>", unsafe_allow_html=True)
-with c2:
-    st.markdown(f"<div style='text-align:center'>Strains<br><b>{len(st.session_state.strains)}</b></div>", unsafe_allow_html=True)
-with c3:
-    st.markdown(f"<div style='text-align:center'>Expenses<br><b>{len(st.session_state.expenses)}</b></div>", unsafe_allow_html=True)
-with c4:
-    st.markdown(f"<div style='text-align:center'>Income<br><b>{len(st.session_state.income)}</b></div>", unsafe_allow_html=True)
-with c5:
-    st.markdown(f"<div style='text-align:center'>Stock<br><b>{len(st.session_state.stock)}</b></div>", unsafe_allow_html=True)
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    st.markdown("<div style='text-align:center'>🌱<br><b>Plants</b><br>{}</div>".format(len(st.session_state.plants)), unsafe_allow_html=True)
+with col2:
+    st.markdown("<div style='text-align:center'>🧬<br><b>Strains</b><br>{}</div>".format(len(st.session_state.strains)), unsafe_allow_html=True)
+with col3:
+    st.markdown("<div style='text-align:center'>💰<br><b>Expenses</b><br>{}</div>".format(len(st.session_state.expenses)), unsafe_allow_html=True)
+with col4:
+    st.markdown("<div style='text-align:center'>💵<br><b>Income</b><br>{}</div>".format(len(st.session_state.income)), unsafe_allow_html=True)
+with col5:
+    st.markdown("<div style='text-align:center'>📦<br><b>Stock</b><br>{}</div>".format(len(st.session_state.stock)), unsafe_allow_html=True)
