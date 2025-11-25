@@ -37,8 +37,12 @@ if st.session_state.user is None:
 # Shows who is logged in at the top of the sidebar
 st.sidebar.success(f"Logged in as **{st.session_state.user.upper()}**")
 
-st.set_page_config(page_title="Cannabis Grow Tracker", layout="wide", page_icon="Cannabis")
-
+st.set_page_config(
+    page_title="Grow Tracker",
+    page_icon="🌿",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 # ===================== INITIALISE DATA =====================
 def initialize_session_state():
     if 'plants' not in st.session_state:
