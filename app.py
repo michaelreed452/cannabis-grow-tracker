@@ -287,16 +287,16 @@ elif page == "Export to Excel":
         st.success("File ready!")
 
 # ===================== FOOTER =====================
-# === FINAL FOOTER – WORKS 100% IN LIGHT & DARK MODE ===
+# === FINAL FOOTER WITH EMOJIS – 100% STABLE & BEAUTIFUL ===
 st.markdown("---")
 c1, c2, c3, c4, c5 = st.columns(5)
 with c1:
-    st.markdown(f"<div style='text-align:center'><b>Plants</b><br>{len(st.session_state.plants)}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center'>Plants<br><b>{len(st.session_state.plants)}</b></div>", unsafe_allow_html=True)
 with c2:
-    st.markdown(f"<div style='text-align:center'><b>Strains</b><br>{len(st.session_state.strains)}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center'>Strains<br><b>{len(st.session_state.strains)}</b></div>", unsafe_allow_html=True)
 with c3:
-    st.markdown(f"<div style='text-align:center'><b>Expenses</b><br>{len(st.session_state.expenses)}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center'>Expenses<br><b>{len(st.session_state.expenses)}</b></div>", unsafe_allow_html=True)
 with c4:
-    st.markdown(f"<div style='text-align:center'><b>Income</b><br>{len(st.session_state.income)}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center'>Income<br><b>{len(st.session_state.income)}</b></div>", unsafe_allow_html=True)
 with c5:
-    st.markdown(f"<div style='text-align:center'><b>Stock</b><br>{len(st.session_state.stock)}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center'>Stock<br><b>{len(st.session_state.stock)}</b></div>", unsafe_allow_html=True)
