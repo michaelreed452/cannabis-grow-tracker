@@ -7,6 +7,18 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 import io
 
+# === CUSTOM PWA ICON (WORKS ON STREAMLIT CLOUD) ===
+st.markdown("""
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiR3JvdyBUcmFja2VyIiwic2hvcnRfbmFtZSI6Ikdyb3ciLCJzdGFydF91cmwiOiJodHRwczovL21pY2hhZWxyZWVkNDUyLWNhbm5hYmlzLWdyb3ctdHJhY2tlci5zdHJlYW1saXQuYXBwLyIsImRpc3BsYXkiOiJzdGFuZHN0YW5kIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmMGYyZjYiLCJ0aGVtZV9jb2xvciI6IiM0MGRmN2MiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL21pY2hhZWxyZWVkNDUyL2Nhbm5hYmlzLWdyb3ctdHJhY2tlci9tYWluL2xlYWYucG5nIiwic2l6ZXMiOiIyNTZ4MjU2IiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=">
+""", unsafe_allow_html=True)
+
+st.set_page_config(
+    page_title="Grow Tracker",
+    page_icon="https://raw.githubusercontent.com/michaelreed452/cannabis-grow-tracker/main/leaf.png",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # === USERNAME + PASSWORD + TRACKS WHO IS LOGGED IN ===
 if "user" not in st.session_state:
     st.session_state.user = None
