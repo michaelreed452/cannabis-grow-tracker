@@ -114,30 +114,75 @@ if page == "Dashboard":
 
 elif page == "Plants Tracker":
     st.title("Plants Tracker")
-    t1, t2 = st.tabs(["View & Edit", "Add New"])
-    with t1:
-        if len(st.session_state.plants)>0:
-            edited = st.data_editor(st.session_state.plants, num_rows="dynamic", use_container_width=True, hide_index=True)
-            if st.button("Save Changes"):
+    tab1, tab2 = st.tabs(["View & Edit", "Add New"])
+
+    with tab1:
+        if len(st.session_state.plants) > 0:
+            edited = st.data_editor(
+                st.session_state.plants,
+                num_rows="dynamic",
+                use_container_width=True,
+                hide_index=True
+            )
+            if st.button("Save Changes", type="primary"):
                 st.session_state.plants = edited
-                st.success("Saved!")
+                st.success("All plants updated!")
                 st.rerun()
         else:
-            st.info("No plants")
-    with t2:
-        with st.form("add_plant"):
-            c1,c2 = st.columns(2)
-            with c1:
-                pid = st.text_input("Plant ID *")
+            st.info("No plants yet — add one in the next tab")
+
+    with tab2:
+        with st.form("add_plant_form"):
+            st.subheader("Add New Plant")
+            col1, col2 = st.columns(2)
+            with col1:
+                plant_id = st.text_input("Plant ID *")
                 strain = st.text_input("Strain Name *")
+                variety = st.selectbox("Variety", ["Sativa", "Indica", "Hybrid"])
+                gender = st.selectbox("Gender", ["Female", "Male", "Unknown"])
+                environment = st.selectbox("Environment", ["Indoor", "Outdoor", "Greenhouse"])
                 medium = st.selectbox("Growing Medium", ["Fabric Pot","Plastic Pot","Direct Soil","Coco","Hydro","Air Pot"])
-                size = st.number_input("Container Size (L)", 0.0, step=0.5)
-            # add the rest of your fields here (you already know them)
-            if st.form_submit_button("Add Plant") and pid and strain:
-                new = pd.DataFrame([{**{k:v for k,v in locals().items() if k in st.session_state.plants.columns}}])
-                st.session_state.plants = pd.concat([st.session_state.plants, new], ignore_index=True)
-                st.success("Plant added!")
-                st.rerun()
+                container = st.number_input("Container Size (L)", min_value=0.0, step=0.5)
+            with col2:
+                source = st.text_input("Source / Batch #")
+                germ_date = st.date_input("Date Germination", date.today())
+                veg_date = st.date_input("Date Transplant Veg (optional)", value, value=None)
+                flip_date = st.date_input("Date Flip to Flower (optional)", value=None)
+                harvest_date = st.date_input("Date Harvest (optional)", value=None)
+                notes = st.text_area("Phenotype / Health Notes")
+
+            if st.form_submit_button("Add Plant", type="primary"):
+                if not plant_id or not strain:
+                    st.error("Plant ID and Strain Name are required")
+                else:
+                    new_plant = pd.DataFrame([{
+                        "Plant ID": plant_id,
+                        "Strain Name": strain,
+                        "Variety": variety,
+                        "Gender": gender,
+                        "Environment": environment,
+                        "Type": "",
+                        "Source": source,
+                        "Batch #": source,
+                        "Date Germination": pd.to_datetime(germ_date),
+                        "Date Transplant Veg": pd.to_datetime(veg_date) if veg_date else pd.NaT,
+                        "Date Flip Flower": pd.to_datetime(flip_date) if flip_date else pd.NaT,
+                        "Date Harvest": pd.to_datetime(harvest_date) if harvest_date else pd.NaT,
+                        "Wet Weight (g)": 0.0,
+                        "Dry Weight (g)": 0.0,
+                        "Trimmed Yield (g)": 0.0,
+                        "Mother ID": "",
+                        "Growing Medium": medium,
+                        "Container Size (L)": container,
+                        "Phenotype Notes": notes,
+                        "Health Issues": "",
+                        "Rating (1-10)": 0,
+                        "Photos Link": "",
+                        "Status": "Germinating"
+                    }])
+                    st.session_state.plants = pd.concat([st.session_state.plants, new_plant], ignore_index=True)
+                    st.success(f"Plant {plant_id} added!")
+                    st.rerun()
 
 elif page == "Feeding Schedule":
     st.title("Feeding Schedule")
