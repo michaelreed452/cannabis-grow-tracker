@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -68,7 +69,7 @@ def initialize_session_state():
         ])
     if 'stock' not in st.session_state:
         st.session_state.stock = pd.DataFrame(columns=[
-            'Strain', 'Breeder', 'Seeds/Clones Left', 'Pack Cost (ZAR)'
+            'Strain', 'Breeder', 'Type', 'Seeds/Clones Left', 'Pack Cost (ZAR)'
         ])
 
 initialize_session_state()
@@ -280,21 +281,30 @@ elif page == "Expenses":
             st.dataframe(st.session_state.expenses, use_container_width=True, hide_index=True)
         else:
             st.info("No expenses yet")
-    with t2:
-        c1, c2 = st.columns(2)
+        with t2:
+        c1, c2, c3 = st.columns(3)
         with c1:
-            date_e = st.date_input("Date", date.today())
-            cat = st.selectbox("Category", categories)
-            item = st.text_input("Item *")
-            cost = st.number_input("Cost (ZAR)", 0.0, step=0.01)
+            strain_s = st.text_input("Strain *")
+            stock_type = st.selectbox("Type", ["Seed", "Clone"])
         with c2:
-            qty = st.number_input("Quantity", 1, step=1)
-            paid = st.text_input("Paid To")
-        if st.button("Add Expense", type="primary"):
-            new = pd.DataFrame([{"Date": date_e, "Category": cat, "Item": item, "Supplier": "", "Cost (ZAR)": cost,
-                                "Quantity": qty, "Paid To": paid, "Notes": "", "Receipt Link": ""}])
-            st.session_state.expenses = pd.concat([st.session_state.expenses, new], ignore_index=True)
-            st.rerun()
+            left = st.number_input("Seeds/Clones Left", min_value=0, step=1)
+        with c3:
+            cost_s = st.number_input("Pack Cost (ZAR)", min_value=0.0, step=0.01)
+
+        if st.button("Add Stock", type="primary"):
+            if not strain_s:
+                st.error("Strain name is required")
+            else:
+                new = pd.DataFrame([{
+                    "Strain": strain_s,
+                    "Breeder": "",
+                    "Type": stock_type,
+                    "Seeds/Clones Left": left,
+                    "Pack Cost (ZAR)": cost_s
+                }])
+                st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
+                st.success("Stock added!")
+                st.rerun()
 
 elif page == "Income":
     st.title("Income Tracker")
@@ -327,10 +337,11 @@ elif page == "Income":
 elif page == "Seed & Clone Stock":
     st.title("Seed & Clone Stock")
     t1, t2 = st.tabs(["View", "Add Stock"])
-    with t1:
-        if len(st.session_state.stock)>0:
+        with t1:
+        if len(st.session_state.stock) > 0:
             df = st.session_state.stock.copy()
-            df["Cost/Unit"] = df["Pack Cost (ZAR)"] / df["Seeds/Clones Left"].replace(0,1)
+            df["Cost/Unit"] = df["Pack Cost (ZAR)"] / df["Seeds/Clones Left"].replace(0, 1)
+            df = df[["Strain", "Type", "Seeds/Clones Left", "Pack Cost (ZAR)", "Cost/Unit"]]
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
             st.info("No stock recorded")
