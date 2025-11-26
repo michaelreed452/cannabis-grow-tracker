@@ -35,7 +35,7 @@ if st.session_state.user is None:
     st.stop()
 
 # Shows who is logged in at the top of the sidebar
-st.sidebar.success(f"Logged in as **{st.session_state.user.upper()}**")
+st.sidebar.success(f"Logged in as **{st.session_state.user}**")
 
 st.set_page_config(
     page_title="Grow Tracker",
