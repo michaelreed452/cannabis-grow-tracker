@@ -199,12 +199,16 @@ elif page == "Plants Tracker":
     st.title("Plants Tracker")
     tab1, tab2 = st.tabs(["View Plants", "Add New Plant"])
 
-        with tab1:
+    with tab1:
         if len(st.session_state.plants) > 0:
             df = st.session_state.plants.copy()
             df["Current Stage"] = df.apply(get_current_stage, axis=1)
-            df["Flowering Days"] = df.apply(lambda r: calculate_flowering_days(r["Date Flip Flower"], r["Date Harvest"]),             axis=1)
-            df["Total Days"] = df.apply(lambda r: calculate_total_days(r["Date Germination"], r["Date Harvest"]), axis=1)
+            df["Flowering Days"] = df.apply(
+                lambda r: calculate_flowering_days(r["Date Flip Flower"], r["Date Harvest"]), axis=1
+            )
+            df["Total Days"] = df.apply(
+                lambda r: calculate_total_days(r["Date Germination"], r["Date Harvest"]), axis=1
+            )
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
             st.info("No plants yet")
