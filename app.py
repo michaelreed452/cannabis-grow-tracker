@@ -12,39 +12,36 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ===================== LOGIN – FINAL VERSION THAT NEVER FAILS =====================
-if "user" not in st.session_state:
-    st.session_state.user = None
+# ===================== EXACT-MATCH LOGIN  =====================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.display_name = ""
 
-# Show login screen if not logged in
-if st.session_state.user is None:
+if not st.session_state.logged_in:
     st.markdown("### Login to Grow Tracker")
 
-    with st.form("login_form"):
-        username = st.text_input("Username", placeholder="michael")
-        password = st.text_input("Password", type="password")
+    with st.form("exact_login"):
+        username = st.text_input("Username (exact match)")
+        password = st.text_input("Password (exact match)", type="password")
 
-        # ←←← UPDATE YOUR USERS HERE (case-insensitive) ←←←
-        valid_users = {
-            "Michael": "KATVIS",
+        # ←←← TYPE EXACTLY THESE IN THE BOXES TO LOG IN ←←←
+        EXACT_USERS = {
+            "Michael": "KATVIS",    # ← change ONLY the password if you want
             "Fanie":   "GhostOG420",
-            # add more like "yourname": "yourpass",
+            # add more exactly like this
         }
 
-        submitted = st.form_submit_button("Login", type="primary")
-        if submitted:
-            user_key = username.strip().lower()
-            if user_key in valid_users and valid_users[user_key] == password:
-                st.session_state.user = user_key
-                st.success(f"Welcome {username.strip().title()}!")
+        if st.form_submit_button("Login", type="primary"):
+            if username in EXACT_USERS and EXACT_USERS[username] == password:
+                st.session_state.logged_in = True
+                st.session_state.display_name = username
                 st.rerun()
             else:
-                st.error("Wrong username or password")
+                st.error("Wrong. Type exactly as written in the code.")
 
-    st.stop()   # ← stops execution until login
+    st.stop()
 
-# If we get here, user is logged in → show name in sidebar
-st.sidebar.success(f"Logged in as **{st.session_state.user.title()}**")
+st.sidebar.success(f"Logged in as **{st.session_state.display_name}**")
 
 # ===================== DATA INIT =====================
 def init():
