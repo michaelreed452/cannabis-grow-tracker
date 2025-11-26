@@ -277,34 +277,29 @@ elif page == "Expenses":
                   "Electricity","Water","Pest control","Labor","Salaries","Dividends","Donations","Marketing","Taxes","Misc"]
     t1, t2 = st.tabs(["View", "Add Expense"])
     with t1:
-        if len(st.session_state.expenses)>0:
+        if len(st.session_state.expenses) > 0:
             st.dataframe(st.session_state.expenses, use_container_width=True, hide_index=True)
         else:
             st.info("No expenses yet")
-        with t2:
-        c1, c2, c3 = st.columns(3)
+    with t2:
+        c1, c2 = st.columns(2)
         with c1:
-            strain_s = st.text_input("Strain *")
-            stock_type = st.selectbox("Type", ["Seed", "Clone"])
+            date_e = st.date_input("Date", date.today())
+            cat = st.selectbox("Category", categories)
+            item = st.text_input("Item *")
+            cost = st.number_input("Cost (ZAR)", 0.0, step=0.01)
         with c2:
-            left = st.number_input("Seeds/Clones Left", min_value=0, step=1)
-        with c3:
-            cost_s = st.number_input("Pack Cost (ZAR)", min_value=0.0, step=0.01)
-
-        if st.button("Add Stock", type="primary"):
-            if not strain_s:
-                st.error("Strain name is required")
-            else:
-                new = pd.DataFrame([{
-                    "Strain": strain_s,
-                    "Breeder": "",
-                    "Type": stock_type,
-                    "Seeds/Clones Left": left,
-                    "Pack Cost (ZAR)": cost_s
-                }])
-                st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
-                st.success("Stock added!")
-                st.rerun()
+            qty = st.number_input("Quantity", 1, step=1)
+            paid = st.text_input("Paid To")
+            notes = st.text_area("Notes")
+        if st.button("Add Expense", type="primary"):
+            new = pd.DataFrame([{
+                "Date": date_e, "Category": cat, "Item": item, "Supplier": "", 
+                "Cost (ZAR)": cost, "Quantity": qty, "Paid To": paid, "Notes": notes, "Receipt Link": ""
+            }])
+            st.session_state.expenses = pd.concat([st.session_state.expenses, new], ignore_index=True)
+            st.success("Expense added!")
+            st.rerun()
 
 elif page == "Income":
     st.title("Income Tracker")
@@ -337,7 +332,8 @@ elif page == "Income":
 elif page == "Seed & Clone Stock":
     st.title("Seed & Clone Stock")
     t1, t2 = st.tabs(["View", "Add Stock"])
-        with t1:
+
+    with t1:
         if len(st.session_state.stock) > 0:
             df = st.session_state.stock.copy()
             df["Cost/Unit"] = df["Pack Cost (ZAR)"] / df["Seeds/Clones Left"].replace(0, 1)
@@ -345,15 +341,31 @@ elif page == "Seed & Clone Stock":
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
             st.info("No stock recorded")
+
     with t2:
-        c1, c2 = st.columns(2)
-        with c1: strain_s = st.text_input("Strain *")
-        with c2: left = st.number_input("Seeds/Clones Left", 0, step=1)
-        with c1: cost_s = st.number_input("Pack Cost (ZAR)", 0.0, step=0.01)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            strain_s = st.text_input("Strain *")
+            stock_type = st.selectbox("Type", ["Seed", "Clone"])
+        with c2:
+            left = st.number_input("Seeds/Clones Left", min_value=0, step=1)
+        with c3:
+            cost_s = st.number_input("Pack Cost (ZAR)", min_value=0.0, step=0.01)
+
         if st.button("Add Stock", type="primary"):
-            new = pd.DataFrame([{"Strain": strain_s, "Breeder": "", "Seeds/Clones Left": left, "Pack Cost (ZAR)": cost_s}])
-            st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
-            st.rerun()
+            if not strain_s.strip():
+                st.error("Strain name is required")
+            else:
+                new = pd.DataFrame([{
+                    "Strain": strain_s,
+                    "Breeder": "",
+                    "Type": stock_type,
+                    "Seeds/Clones Left": left,
+                    "Pack Cost (ZAR)": cost_s
+                }])
+                st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
+                st.success("Stock added!")
+                st.rerun()
 
 elif page == "Feeding Schedule":
     st.title("Feeding Schedule")
