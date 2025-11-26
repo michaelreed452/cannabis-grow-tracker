@@ -24,9 +24,8 @@ if st.session_state.user is None:
         password = st.text_input("Password", type="password")
     if st.button("Login"):
         valid_users = {
-            "michael": "grow123",
-            "tyson": "420tyson",
-            "john": "secret123",
+            "Michael": "KATVIS",
+            "Fanie": "GhostOG420",
             # add more below
         }
         if username.lower() in valid_users and valid_users[username.lower()] == password:
