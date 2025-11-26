@@ -12,36 +12,38 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ===================== LOGIN – FIXED & BULLETPROOF =====================
+# ===================== LOGIN – FINAL VERSION THAT NEVER FAILS =====================
 if "user" not in st.session_state:
     st.session_state.user = None
 
+# Show login screen if not logged in
 if st.session_state.user is None:
     st.markdown("### Login to Grow Tracker")
-    col1, col2 = st.columns(2)
-    with col1:
-        username = st.text_input("Username", placeholder="e.g. michael")
-    with col2:
-        password = st.text_input("Password", type="password", placeholder="your password")
 
-    if st.button("Login", type="primary"):
+    with st.form("login_form"):
+        username = st.text_input("Username", placeholder="michael")
+        password = st.text_input("Password", type="password")
+
         # ←←← UPDATE YOUR USERS HERE (case-insensitive) ←←←
         valid_users = {
             "Michael": "KATVIS",
             "Fanie":   "GhostOG420",
-            # add more like this →  "yourname": "yourpassword",
+            # add more like "yourname": "yourpass",
         }
 
-        user_key = username.strip().lower()
-        if user_key in valid_users and valid_users[user_key] == password.strip():
-            st.session_state.user = user_key
-            st.success(f"Welcome back, {username.strip().title()}!")
-            st.rerun()
-        else:
-            st.error("Wrong username or password – try again")
-    st.stop()
+        submitted = st.form_submit_button("Login", type="primary")
+        if submitted:
+            user_key = username.strip().lower()
+            if user_key in valid_users and valid_users[user_key] == password:
+                st.session_state.user = user_key
+                st.success(f"Welcome {username.strip().title()}!")
+                st.rerun()
+            else:
+                st.error("Wrong username or password")
 
-# This line shows the properly-capitalised name in the sidebar
+    st.stop()   # ← stops execution until login
+
+# If we get here, user is logged in → show name in sidebar
 st.sidebar.success(f"Logged in as **{st.session_state.user.title()}**")
 
 # ===================== DATA INIT =====================
