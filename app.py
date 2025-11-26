@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ===================== PASSWORD + USER LOGIN =====================
+# ===================== LOGIN =====================
 if "user" not in st.session_state:
     st.session_state.user = None
 
@@ -22,42 +22,46 @@ if st.session_state.user is None:
         username = st.text_input("Username")
     with col2:
         password = st.text_input("Password", type="password")
-    
     if st.button("Login"):
         valid_users = {
             "michael": "grow123",
             "tyson": "420tyson",
             "john": "secret123",
-            # add more users here
+            # add more below
         }
         if username.lower() in valid_users and valid_users[username.lower()] == password:
             st.session_state.user = username.lower()
             st.success(f"Welcome {username.title()}!")
             st.rerun()
         else:
-            st.error("Wrong username or password")
+            st.error("Wrong credentials")
     st.stop()
 
-# Show clean name in sidebar
 st.sidebar.success(f"Logged in as **{st.session_state.user.title()}**")
 
-# ===================== INITIALISE DATA =====================
+# ===================== DATA INIT =====================
 def init():
     if "plants" not in st.session_state:
         st.session_state.plants = pd.DataFrame(columns=[
             "Plant ID","Strain Name","Variety","Gender","Environment","Type","Source","Batch #",
             "Date Germination","Date Transplant Veg","Date Flip Flower","Date Harvest",
             "Wet Weight (g)","Dry Weight (g)","Trimmed Yield (g)","Mother ID",
-            "Growing Medium","Container Size","Phenotype Notes","Health Issues",
+            "Growing Medium","Container Size (L)","Phenotype Notes","Health Issues",
             "Rating (1-10)","Photos Link","Status"
         ])
+    if "strains" not in st.session_state:
+        st.session_state.strains = pd.DataFrame(columns=["Strain Name","Breeder","Variety","Expected Flower Time","THC %","Terpene Profile","Average Yield (g/plant)","Times Grown","Best Pheno Notes","Keeper?"])
+    if "expenses" not in st.session_state:
+        st.session_state.expenses = pd.DataFrame(columns=["Date","Category","Item","Supplier","Cost (ZAR)","Quantity","Paid To","Notes","Receipt Link"])
+    if "income" not in st.session_state:
+        st.session_state.income = pd.DataFrame(columns=["Date","Strain","Grams Sold","Price per Gram","Buyer/Channel","Payment Method","Notes"])
+    if "stock" not in st.session_state:
+        st.session_state.stock = pd.DataFrame(columns=["Strain","Breeder","Seeds/Clones Left","Pack Cost (ZAR)"])
     if "feeding" not in st.session_state:
         st.session_state.feeding = pd.DataFrame(columns=[
             "Date","Plant IDs","Stage","Nutrient 1","Amount 1","Nutrient 2","Amount 2",
             "Nutrient 3","Amount 3","Nutrient 4","Amount 4","Nutrient 5","Amount 5","Notes"
         ])
-    # ... keep your other dataframes (strains, expenses, etc.)
-
 init()
 
 NUTRIENTS = ["CalMag Essential","NC32","Pot Grow","Pot Flora","Pot Radix","Bio-Blend","Carbon K","Multi Foliar Spray Concentrate","Other"]
@@ -68,8 +72,9 @@ def get_stage(row):
     germ = row["Date Germination"]
     veg = row["Date Transplant Veg"]
     flip = row["Date Flip Flower"]
+    harvest = row["Date Harvest"]
     if pd.isna(germ): return "Not Started"
-    if pd.notna(row["Date Harvest"]) and row["Date Harvest"] <= today: return "Harvested"
+    if pd.notna(harvest) and harvest <= today: return "Harvested"
     if pd.notna(flip) and flip <= today:
         weeks = (today - flip).days // 7 + 1
         return f"Flower Week {weeks}"
@@ -88,123 +93,119 @@ pages = ["Dashboard","Plants Tracker","Strains Library","Expenses","Income","See
 emojis = ["Home","Plants","Strains","Expenses","Income","Stock","Feeding","Excel"]
 
 for i, p in enumerate(pages):
-    if st.sidebar.button(f"{emojis[i]} {p}", use_container_width=True, 
+    if st.sidebar.button(f"{emojis[i]} {p}", use_container_width=True,
                         type="primary" if st.session_state.get("page") == p else "secondary"):
         st.session_state.page = p
 page = st.session_state.get("page", "Dashboard")
 
-# ===================== FEEDING SCHEDULE =====================
+# ===================== PAGES =====================
+if page == "Dashboard":
+    st.title("Home Dashboard")
+    c1,c2,c3,c4 = st.columns(4)
+    c1.metric("Plants", len(st.session_state.plants))
+    c2.metric("Yield", f"{st.session_state.plants['Trimmed Yield (g)'].sum():.1f} g")
+    c3.metric("Expenses", f"R {st.session_state.expenses['Cost (ZAR)'].sum():,.2f}")
+    income = (st.session_state.income["Grams Sold"] * st.session_state.income["Price per Gram"]).sum() if len(st.session_state.income)>0 else 0
+    c4.metric("Income", f"R {income:,.2f}")
+
+elif page == "Plants Tracker":
+    st.title("Plants Tracker")
+    t1, t2 = st.tabs(["View & Edit", "Add New"])
+    with t1:
+        if len(st.session_state.plants)>0:
+            edited = st.data_editor(st.session_state.plants, num_rows="dynamic", use_container_width=True, hide_index=True)
+            if st.button("Save Changes"):
+                st.session_state.plants = edited
+                st.success("Saved!")
+                st.rerun()
+        else:
+            st.info("No plants")
+    with t2:
+        with st.form("add_plant"):
+            c1,c2 = st.columns(2)
+            with c1:
+                pid = st.text_input("Plant ID *")
+                strain = st.text_input("Strain Name *")
+                medium = st.selectbox("Growing Medium", ["Fabric Pot","Plastic Pot","Direct Soil","Coco","Hydro","Air Pot"])
+                size = st.number_input("Container Size (L)", 0.0, step=0.5)
+            # add the rest of your fields here (you already know them)
+            if st.form_submit_button("Add Plant") and pid and strain:
+                new = pd.DataFrame([{**{k:v for k,v in locals().items() if k in st.session_state.plants.columns}}])
+                st.session_state.plants = pd.concat([st.session_state.plants, new], ignore_index=True)
+                st.success("Plant added!")
+                st.rerun()
+
 elif page == "Feeding Schedule":
     st.title("Feeding Schedule")
-    tab1, tab2 = st.tabs(["Add Feeding", "History"])
-
-    with tab1:
+    t1,t2 = st.tabs(["Add Feeding","History"])
+    with t1:
         with st.form("feed"):
             date_feed = st.date_input("Date", date.today())
-
-            # Plant selection
-            if len(st.session_state.plants) == 0:
-                st.warning("No plants")
+            if len(st.session_state.plants)==0:
+                st.warning("No plants yet")
             else:
-                mode = st.radio("Select", ["Single Plant", "Group"])
+                mode = st.radio("Select", ["Single Plant","Group"])
                 if mode == "Single Plant":
                     pid = st.selectbox("Plant ID", st.session_state.plants["Plant ID"])
                     plant_ids = [pid]
-                    stage = st.session_state.plants[st.session_state.plants["Plant ID"] == pid]["Current Stage"].iloc[0]
+                    stage = st.session_state.plants.loc[st.session_state.plants["Plant ID"]==pid, "Current Stage"].iloc[0]
                 else:
-                    group = st.selectbox("Group", ["All Plants", "All Veg", "All Flower"] + sorted(st.session_state.plants["Current Stage"].dropna().unique()))
-                    if group == "All Plants":
-                        plant_ids = st.session_state.plants["Plant ID"].tolist()
-                    elif group == "All Veg":
-                        plant_ids = st.session_state.plants[st.session_state.plants["Current Stage"].str.contains("Veg|Seedling")]["Plant ID"].tolist()
-                    elif group == "All Flower":
-                        plant_ids = st.session_state.plants[st.session_state.plants["Current Stage"].str.contains("Flower")]["Plant ID"].tolist()
-                    else:
-                        plant_ids = st.session_state.plants[st.session_state.plants["Current Stage"] == group]["Plant ID"].tolist()
+                    group = st.selectbox("Group", ["All Plants","All Veg","All Flower"] + sorted(st.session_state.plants["Current Stage"].dropna().unique()))
+                    if group=="All Plants": plant_ids = st.session_state.plants["Plant ID"].tolist()
+                    elif group=="All Veg": plant_ids = st.session_state.plants[st.session_state.plants["Current Stage"].str.contains("Veg|Seedling")]["Plant ID"].tolist()
+                    elif group=="All Flower": plant_ids = st.session_state.plants[st.session_state.plants["Current Stage"].str.contains("Flower")]["Plant ID"].tolist()
+                    else: plant_ids = st.session_state.plants[st.session_state.plants["Current Stage"]==group]["Plant ID"].tolist()
                     stage = group
                     st.info(f"Selected: {', '.join(plant_ids)}")
 
-            # Nutrients
-            nut1 = st.selectbox("Nutrient 1", NUTRIENTS)
-            amt1 = st.number_input("Amount 1 (ml/g)", 0.0, step=0.1)
-            if nut1 == "Other":
-                nut1 = st.text_input("Specify other nutrient")
+                nut1 = st.selectbox("Nutrient 1", NUTRIENTS)
+                amt1 = st.number_input("Amount 1 (ml/g)", 0.0, step=0.1)
+                if nut1=="Other": nut1 = st.text_input("Specify other nutrient")
 
-            more = st.checkbox("Add more nutrients (up to 5 total)")
-            extras = []
-            if more:
-                count = st.slider("How many more?", 1, 4, 1)
-                for i in range(count):
-                    n = st.selectbox(f"Nutrient {i+2}", NUTRIENTS, key=f"n{i}")
-                    a = st.number_input(f"Amount {i+2}", 0.0, step=0.1, key=f"a{i}")
-                    if n == "Other":
-                        n = st.text_input(f"Specify other {i+2}", key=f"o{i}")
-                    extras.append((n, a))
+                more = st.checkbox("Add more nutrients")
+                extras = []
+                if more:
+                    count = st.slider("How many more?",1,4,1)
+                    for i in range(count):
+                        n = st.selectbox(f"Nutrient {i+2}", NUTRIENTS, key=f"n{i}")
+                        a = st.number_input(f"Amount {i+2}", 0.0, step=0.1, key=f"a{i}")
+                        if n=="Other": n = st.text_input("Specify", key=f"o{i}")
+                        extras.append((n,a))
 
-            notes = st.text_area("Notes (optional)")
+                notes = st.text_area("Notes")
 
-            if st.form_submit_button("Save Feeding"):
-                row = {"Date": date_feed, "Plant IDs": ", ".join(plant_ids), "Stage": stage,
-                       "Nutrient 1": nut1, "Amount 1": amt1}
-                for i, (n, a) in enumerate(extras):
-                    row[f"Nutrient {i+2}"] = n
-                    row[f"Amount {i+2}"] = a
-                row["Notes"] = notes
-                st.session_state.feeding = pd.concat([st.session_state.feeding, pd.DataFrame([row])], ignore_index=True)
-                st.success("Feeding saved!")
-                st.rerun()
+                if st.form_submit_button("Save Feeding"):
+                    row = {"Date":date_feed,"Plant IDs":", ".join(plant_ids),"Stage":stage,
+                           "Nutrient 1":nut1,"Amount 1":amt1,"Notes":notes}
+                    for i,(n,a) in enumerate(extras):
+                        row[f"Nutrient {i+2}"] = n
+                        row[f"Amount {i+2}"] = a
+                    st.session_state.feeding = pd.concat([st.session_state.feeding, pd.DataFrame([row])], ignore_index=True)
+                    st.success("Feeding recorded!")
+                    st.rerun()
 
-    with tab2:
-        if len(st.session_state.feeding) > 0:
-            st.dataframe(st.session_state.feeding.sort_values("Date", ascending=False), use_container_width=True)
+    with t2:
+        if len(st.session_state.feeding)>0:
+            st.dataframe(st.session_state.feeding.sort_values("Date", ascending=False), use_container_width=True, hide_index=True)
         else:
             st.info("No feedings yet")
 
-# ===================== PLANTS TRACKER WITH EDIT =====================
-elif page == "Plants Tracker":
-    st.title("Plants Tracker")
-    tab1, tab2 = st.tabs(["View & Edit", "Add New"])
+# (Keep your other pages — Strains, Expenses, Income, Stock — exactly as before)
 
-    with tab1:
-        if len(st.session_state.plants) > 0:
-            edited = st.data_editor(
-                st.session_state.plants,
-                num_rows="dynamic",
-                use_container_width=True,
-                hide_index=True
-            )
-            if st.button("Save Changes"):
-                st.session_state.plants = edited
-                st.success("Plants updated!")
-                st.rerun()
-        else:
-            st.info("No plants yet")
-
-    with tab2:
-        with st.form("add_plant"):
-            c1, c2 = st.columns(2)
-            with c1:
-                st.text_input("Plant ID *", key="pid")
-                st.text_input("Strain Name *", key="strain")
-                st.selectbox("Growing Medium", ["Fabric Pot", "Plastic Pot", "Direct Soil", "Coco", "Hydro", "Air Pot"], key="medium")
-                st.number_input("Container Size (L or bed size)", 0.0, step=0.5, key="size")
-            # ... rest of your plant form
-            # (kept short — you already have this)
-
-# ===================== EXPORT WITH FEEDING TAB =====================
 elif page == "Export to Excel":
-    if st.button("Download Full Tracker"):
+    st.title("Export to Excel")
+    if st.button("Generate File", type="primary"):
         wb = Workbook()
         wb.remove(wb.active)
-        for name, df in [("Plants", st.session_state.plants), ("Feeding", st.session_state.feeding),
-                         ("Strains", st.session_state.strains), ("Expenses", st.session_state.expenses),
-                         ("Income", st.session_state.income), ("Stock", st.session_state.stock)]:
+        for name, df in [("Plants",st.session_state.plants),("Feeding",st.session_state.feeding),
+                         ("Strains",st.session_state.strains),("Expenses",st.session_state.expenses),
+                         ("Income",st.session_state.income),("Stock",st.session_state.stock)]:
             ws = wb.create_sheet(name[:31])
-            for c, col in enumerate(df.columns, 1):
-                ws.cell(1, c, col).font = Font(bold=True)
-            for r, row in enumerate(df.itertuples(index=False), 2):
-                for col, val in enumerate(row, 1):
-                    ws.cell(r, col, val)
+            for c,col in enumerate(df.columns,1):
+                ws.cell(1,c,col).font = Font(bold=True)
+            for r,row in enumerate(df.itertuples(index=False),2):
+                for c,val in enumerate(row,1):
+                    ws.cell(r,c,val)
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)
@@ -213,8 +214,8 @@ elif page == "Export to Excel":
 # ===================== FOOTER =====================
 st.markdown("---")
 c1,c2,c3,c4,c5 = st.columns(5)
-with c1: st.markdown(f"<div style='text-align:center'>Plants<br><b>{len(st.session_state.plants)}</b></div>", True)
-with c2: st.markdown(f"<div style='text-align:center'>Strains<br><b>{len(st.session_state.strains)}</b></div>", True)
-with c3: st.markdown(f"<div style='text-align:center'>Expenses<br><b>{len(st.session_state.expenses)}</b></div>", True)
-with c4: st.markdown(f"<div style='text-align:center'>Income<br><b>{len(st.session_state.income)}</b></div>", True)
-with c5: st.markdown(f"<div style='text-align:center'>Stock<br><b>{len(st.session_state.stock)}</b></div>", True)
+with c1: st.markdown(f"<div style='text-align:center'>Plants<br><b>{len(st.session_state.plants)}</b></div>", unsafe_allow_html=True)
+with c2: st.markdown(f"<div style='text-align:center'>Strains<br><b>{len(st.session_state.strains)}</b></div>", unsafe_allow_html=True)
+with c3: st.markdown(f"<div style='text-align:center'>Expenses<br><b>{len(st.session_state.expenses)}</b></div>", unsafe_allow_html=True)
+with c4: st.markdown(f"<div style='text-align:center'>Income<br><b>{len(st.session_state.income)}</b></div>", unsafe_allow_html=True)
+with c5: st.markdown(f"<div style='text-align:center'>Stock<br><b>{len(st.session_state.stock)}</b></div>", unsafe_allow_html=True)
