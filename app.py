@@ -85,6 +85,33 @@ def initialize_session_state():
 
 initialize_session_state()
 
+# ===================== AUTO CURRENT STAGE – FIXED & ACCURATE =====================
+def get_current_stage(row):
+    today = date.today()
+    germ = pd.to_datetime(row["Date Germination"], errors='coerce')
+    veg = pd.to_datetime(row["Date Transplant Veg"], errors='coerce')
+    flip = pd.to_datetime(row["Date Flip Flower"], errors='coerce')
+    harvest = pd.to_datetime(row["Date Harvest"], errors='coerce')
+
+    if pd.notna(harvest) and harvest <= today:
+        return "Harvested"
+    if pd.notna(flip):
+        days_in_flower = (today - flip).days
+        if days_in_flower >= 0:
+            week = days_in_flower // 7 + 1
+            return f"Flower Week {week}"
+    if pd.notna(veg):
+        days_in_veg = (today - veg).days
+        if days_in_veg >= 0:
+            week = days_in_veg // 7 + 1
+            return f"Veg Week {week}"
+    if pd.notna(germ):
+        days_germ = (today - germ).days
+        if days_germ >= 0:
+            week = days_germ // 7 + 1
+            return f"Germ Week {week}"
+    return "Not Started"
+
 # ===================== CALCULATIONS =====================
 def calculate_flowering_days(flip, harvest):
     if pd.notna(flip) and pd.notna(harvest):
@@ -148,8 +175,8 @@ def export_to_excel():
 # === FIXED SIDEBAR WITH EMOJIS THAT ACTUALLY SHOW ===
 st.sidebar.markdown("### Navigation")
 
-pages = ["Dashboard","Plants Tracker","Strains Library","Expenses","Income","Seed & Clone Stock","Export to Excel"]
-emojis = ["🏠","🌱","🧬","💰","💵","📦","📊"]
+pages = ["Dashboard","Plants Tracker","Strains Library","Expenses","Income","Seed & Clone Stock","Feeding Schedule","Export to Excel"]
+emojis = ["🏠","🌱","🧬","💰","💵","📦","🍽","📊"]
 
 for i, name in enumerate(pages):
     if st.sidebar.button(f"{emojis[i]} {name}", use_container_width=True):
@@ -174,7 +201,8 @@ elif page == "Plants Tracker":
 
     with tab1:
         if len(st.session_state.plants) > 0:
-            df = st.session_state.plants.copy()
+                        df = st.session_state.plants.copy()
+            df["Current Stage"] = df.apply(get_current_stage, axis=1)
             df["Flowering Days"] = df.apply(lambda r: calculate_flowering_days(r["Date Flip Flower"], r["Date Harvest"]), axis=1)
             df["Total Days"] = df.apply(lambda r: calculate_total_days(r["Date Germination"], r["Date Harvest"]), axis=1)
             st.dataframe(df, use_container_width=True, hide_index=True)
@@ -323,6 +351,173 @@ elif page == "Seed & Clone Stock":
             new = pd.DataFrame([{"Strain": strain_s, "Breeder": "", "Seeds/Clones Left": left, "Pack Cost (ZAR)": cost_s}])
             st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
             st.rerun()
+
+elif page == "Feeding Schedule":
+    st.title("Feeding Schedule")
+
+    # Initialize feeding history if not exists
+    if 'feeding' not in st.session_state:
+        st.session_state.feeding = pd.DataFrame(columns=[
+            "Date", "Plant ID(s)", "Stage", "Nutrient 1", "Amount 1 (ml/L)", 
+            "Nutrient 2", "Amount 2 (ml/L)", "Nutrient 3", "Amount 3 (ml/L)", 
+            "Nutrient 4", "Amount 4 (ml/L)", "Nutrient 5", "Amount 5 (ml/L)", "Notes"
+        ])
+
+    tab1, tab2 = st.tabs(["Add Feeding", "History"])
+
+    with tab1:
+        with st.form("feeding_form", clear_on_submit=True):
+            feed_date = st.date_input("Date", value=date.today())
+
+            # Get latest plant data
+            if len(st.session_state.plants) == 0:
+                st.warning("No plants yet. Add plants first.")
+                plant_options = []
+            else:
+                # Always use latest plant data
+                current_plants = st.session_state.plants.copy()
+                # Auto-calculate current stage
+                def get_current_stage(row):
+                    today = date.today()
+                    germ = pd.to_datetime(row["Date Germination"], errors='coerce')
+                    veg = pd.to_datetime(row["Date Transplant Veg"], errors='coerce')
+                    flip = pd.to_datetime(row["Date Flip Flower"], errors='coerce')
+                    harvest = pd.to_datetime(row["Date Harvest"], errors='coerce')
+                    if pd.notna(harvest) and harvest <= today:
+                        return "Harvested"
+                    if pd.notna(flip) and flip <= today:
+                        return "Flower"
+                    if pd.notna(veg) and veg <= today:
+                        return "Veg"
+                    if pd.notna(germ):
+                        return "Germinating"
+                    return "Not Started"
+
+                current_plants["Current Stage"] = current_plants.apply(get_current_stage, axis=1)
+                plant_options = current_plants["Plant ID"].tolist()
+
+            # Option 1: Select individual plant
+            selected_plant = st.selectbox("Select Plant ID", ["(Select one)"] + plant_options)
+
+            # Option 2: Select by group
+            group = st.selectbox("Or feed a group", [
+                "None",
+                "All Plants",
+                "All in Germinating",
+                "All in Veg",
+                "All in Flower"
+            ])
+
+            final_plants = []
+            if group != "None":
+                if group == "All Plants":
+                    final_plants = plant_options
+                else:
+                    stage_map = {
+                        "All in Germinating": "Germinating",
+                        "All in Veg": "Veg",
+                        "All in Flower": "Flower"
+                    }
+                    target_stage = stage_map[group]
+                    final_plants = current_plants[current_plants["Current Stage"] == target_stage]["Plant ID"].tolist()
+                if final_plants:
+                    st.success(f"Selected {len(final_plants)} plants: {', '.join(final_plants)}")
+                else:
+                    st.info("No plants in this group.")
+            elif selected_plant != "(Select one)":
+                final_plants = [selected_plant]
+
+          nutrients = [
+            "CalMag Essential",
+            "NC32",
+            "Pot Grow",
+            "Pot Flora",
+            "Pot Radix",
+            "Bio-Blend",
+            "Carbon K",
+            "Multi Foliar Spray Concentrate",
+            "Other (type below)"
+            ]
+
+            # First nutrient (always visible)
+            col1, col2 = st.columns(2)
+            with col1:
+                                nut1 = st.selectbox("Nutrient 1", ["None"] + nutrients)
+                if nut1 == "Other (type below)":
+                    other_nut1 = st.text_input("Specify other nutrient (Nutrient 1)", placeholder="e.g. Rhino Ryder, Silica, etc.")
+                else:
+                    other_nut1 = ""
+            with col2:
+                amt1 = st.number_input("Amount 1 (ml/L)", min_value=0.0, step=0.1, key="amt1")
+
+            # Multiple nutrients?
+            more_nutrients = st.radio("More than one nutrient used?", ("No", "Yes"))
+
+            extra_nuts = {}
+                        if more_nutrients == "Yes":
+                num_extra = st.selectbox("How many more nutrients?", [1,2,3,4,5])
+                for i in range(num_extra):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        nut = st.selectbox(f"Nutrient {i+2}", nutrients, key=f"nut{i+2}")
+                        if nut == "Other (type below)":
+                            other_nut = st.text_input(f"Specify other nutrient (Nutrient {i+2})", key=f"other{i+2}")
+                        else:
+                            other_nut = ""
+                        extra_nuts[f"other{i+2}"] = other_nut
+                    with col2:
+                        amt = st.number_input(f"Amount {i+2} (ml/L)", min_value=0.0, step=0.1, key=f"amt{i+2}")
+                    extra_nuts[f"nut{i+2}"] = nut
+                    extra_nuts[f"amt{i+2}"] = amt
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        nut = st.selectbox(f"Nutrient {i+2}", nutrients, key=f"nut{i+2}")
+                    with col2:
+                        amt = st.number_input(f"Amount {i+2} (ml/L)", min_value=0.0, step=0.1, key=f"amt{i+2}")
+                    extra_nuts[f"nut{i+2}"] = nut
+                    extra_nuts[f"amt{i+2}"] = amt
+
+            notes = st.text_area("Notes (pH, EC, water volume, etc.)")
+
+            if st.form_submit_button("Record Feeding", type="primary"):
+                if not final_plants:
+                    st.error("Select at least one plant")
+                elif nut1 == "None":
+                    st.error("Select at least one nutrient")
+                else:
+                    plant_list = ", ".join(final_plants)
+                    row = {
+                        "Date": feed_date,
+                        "Plant ID(s)": plant_list,
+                        "Stage": group if group != "None" else current_plants[current_plants["Plant ID"].isin(final_plants)]["Current Stage"].iloc[0],
+                       "Nutrient 1": other_nut1 if nut1 == "Other (type below)" else (nut1 if nut1 != "None" else ""),
+                        "Amount 1 (ml/L)": amt1 if nut1 != "None" else 0,
+                        "Nutrient 2": "", "Amount 2 (ml/L)": 0,
+                        "Nutrient 3": "", "Amount 3 (ml/L)": 0,
+                        "Nutrient 4": "", "Amount 4 (ml/L)": 0,
+                        "Nutrient 5": "", "Amount 5 (ml/L)": 0,
+                        "Notes": notes
+                    }
+                    # Fill extra nutrients
+                                        for idx in range(2, 6):
+                        nut_key = f"nut{idx}"
+                        amt_key = f"amt{idx}"
+                        other_key = f"other{idx}"
+                        nut_name = extra_nuts.get(other_key) or extra_nuts.get(nut_key, "")
+                        row[f"Nutrient {idx}"] = nut_name
+                        row[f"Amount {idx} (ml/L)"] = extra_nuts.get(amt_key, 0)
+
+                    new_feed = pd.DataFrame([row])
+                    st.session_state.feeding = pd.concat([st.session_state.feeding, new_feed], ignore_index=True)
+                    st.success(f"Feeding recorded for {len(final_plants)} plant(s)!")
+                    st.rerun()
+
+    with tab2:
+        if len(st.session_state.feeding) > 0:
+            st.dataframe(st.session_state.feeding.sort_values("Date", ascending=False), use_container_width=True, hide_index=True)
+        else:
+            st.info("No feeding records yet")
 
 elif page == "Export to Excel":
     st.title("Export to Excel")
