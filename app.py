@@ -12,30 +12,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ===================== LOGIN =====================
+# ===================== LOGIN – FIXED & BULLETPROOF =====================
 if "user" not in st.session_state:
     st.session_state.user = None
 
 if st.session_state.user is None:
+    st.markdown("### Login to Grow Tracker")
     col1, col2 = st.columns(2)
     with col1:
-        username = st.text_input("Username")
+        username = st.text_input("Username", placeholder="e.g. michael")
     with col2:
-        password = st.text_input("Password", type="password")
-    if st.button("Login"):
+        password = st.text_input("Password", type="password", placeholder="your password")
+
+    if st.button("Login", type="primary"):
+        # ←←← UPDATE YOUR USERS HERE (case-insensitive) ←←←
         valid_users = {
-            "Michael": "KATVIS",
-            "Fanie": "GhostOG420",
-            # add more below
+            "michael": "grow123",
+            "tyson":   "420tyson",
+            "john":    "secret123",
+            # add more like this →  "yourname": "yourpassword",
         }
-        if username.lower() in valid_users and valid_users[username.lower()] == password:
-            st.session_state.user = username.lower()
-            st.success(f"Welcome {username.title()}!")
+
+        user_key = username.strip().lower()
+        if user_key in valid_users and valid_users[user_key] == password.strip():
+            st.session_state.user = user_key
+            st.success(f"Welcome back, {username.strip().title()}!")
             st.rerun()
         else:
-            st.error("Wrong credentials")
+            st.error("Wrong username or password – try again")
     st.stop()
 
+# This line shows the properly-capitalised name in the sidebar
 st.sidebar.success(f"Logged in as **{st.session_state.user.title()}**")
 
 # ===================== DATA INIT =====================
