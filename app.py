@@ -27,9 +27,8 @@ if st.session_state.user is None:
     if st.button("Login", type="primary"):
         # ←←← UPDATE YOUR USERS HERE (case-insensitive) ←←←
         valid_users = {
-            "michael": "grow123",
-            "tyson":   "420tyson",
-            "john":    "secret123",
+            "Michael": "KATVIS",
+            "Fanie":   "GhostOG420",
             # add more like this →  "yourname": "yourpassword",
         }
 
