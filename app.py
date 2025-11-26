@@ -21,8 +21,8 @@ if not st.session_state.logged_in:
     st.markdown("### Login to Grow Tracker")
 
     with st.form("exact_login"):
-        username = st.text_input("Username (exact match)")
-        password = st.text_input("Password (exact match)", type="password")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
 
         # ←←← TYPE EXACTLY THESE IN THE BOXES TO LOG IN ←←←
         EXACT_USERS = {
