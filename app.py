@@ -145,14 +145,17 @@ def export_to_excel():
     for r in pd.DataFrame(plants_df).itertuples(index=False):
         ws.append(list(r))
 
-    # Strains, Expenses, Income, Stock sheets (simple copy)
-    for name, df in [("Strains Library", st.session_state.strains),
-                     ("Expenses", st.session_state.expenses),
-                     ("Income", st.session_state.income),
-                     ("Seed & Clone Stock", st.session_state.stock)]:
+        # Strains, Expenses, Income, Stock + Feeding Schedule
+    for name, df in [
+        ("Strains Library", st.session_state.strains),
+        ("Expenses", st.session_state.expenses),
+        ("Income", st.session_state.income),
+        ("Seed & Clone Stock", st.session_state.stock),
+        ("Feeding Schedule", st.session_state.feeding)
+    ]:
         ws = wb.create_sheet(name)
         header(ws, df.columns.tolist())
-        for r in pd.DataFrame(df).itertuples(index=False):
+        for r in df.itertuples(index=False):
             ws.append(list(r))
 
     buffer = io.BytesIO()
