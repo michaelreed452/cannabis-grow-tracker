@@ -69,7 +69,7 @@ def initialize_session_state():
         ])
     if 'stock' not in st.session_state:
         st.session_state.stock = pd.DataFrame(columns=[
-            'Strain', 'Breeder', 'Type', 'Seeds/Clones Left', 'Pack Cost (ZAR)'
+            'Strain', 'Breeder', 'Seeds Left', 'Pack Cost (ZAR)'
         ])
 
 initialize_session_state()
@@ -150,7 +150,7 @@ def export_to_excel():
         ("Strains Library", st.session_state.strains),
         ("Expenses", st.session_state.expenses),
         ("Income", st.session_state.income),
-        ("Seed & Clone Stock", st.session_state.stock),
+        ("Seed Stock", st.session_state.stock),
         ("Feeding Schedule", st.session_state.feeding)
     ]:
         ws = wb.create_sheet(name)
@@ -167,7 +167,7 @@ def export_to_excel():
 # === FIXED SIDEBAR WITH EMOJIS THAT ACTUALLY SHOW ===
 st.sidebar.markdown("### Navigation")
 
-pages = ["Dashboard","Plants Tracker","Strains Library","Expenses","Income","Seed & Clone Stock","Feeding Schedule","Export to Excel"]
+pages = ["Dashboard","Plants Tracker","Strains Library","Expenses","Income","Seed Stock","Feeding Schedule","Export to Excel"]
 emojis = ["🏠","🌱","🧬","💰","💵","📦","🍽","📊"]
 
 for i, name in enumerate(pages):
@@ -340,32 +340,36 @@ elif page == "Seed Stock":
         if len(st.session_state.stock) > 0:
             df = st.session_state.stock.copy()
             df["Cost/Unit"] = df["Pack Cost (ZAR)"] / df["Seeds Left"].replace(0, 1)
-            df = df[["Strain", "Seeds Left", "Pack Cost (ZAR)", "Cost/Unit"]]
+            df = df[["Strain", "Breeder", "Seeds Left", "Pack Cost (ZAR)", "Cost/Unit"]]
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
-            st.info("No stock recorded")
+            st.info("No seed stock recorded yet")
 
     with t2:
-        c1, c2 = st.columns(3) 
+        c1, c2, c3 = st.columns(3)
         with c1:
-            left = st.number_input("Seeds Left", min_value=0, step=1)
+            strain_s = st.text_input("Strain *", placeholder="e.g. Rosetta 78")
         with c2:
-            cost_s = st.number_input("Pack Cost (ZAR)", min_value=0.0, step=0.01)
+            breeder = st.text_input("Breeder (optional)", placeholder="e.g. Ethos")
+        with c3:
+            seeds_left = st.number_input("Seeds Left", min_value=0, step=1, value=10)
+        with c1:
+            pack_cost = st.number_input("Pack Cost (ZAR)", min_value=0.0, step=0.01, value=0.0)
 
         if st.button("Add Stock", type="primary"):
             if not strain_s.strip():
                 st.error("Strain name is required")
             else:
                 new = pd.DataFrame([{
-                    "Strain": strain_s,
-                    "Breeder": "",
-                    "Seeds Left": left,
-                    "Pack Cost (ZAR)": cost_s
+                    "Strain": strain_s.strip(),
+                    "Breeder": breeder.strip(),
+                    "Seeds Left": int(seeds_left),
+                    "Pack Cost (ZAR)": float(pack_cost)
                 }])
                 st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
-                st.success("Stock added!")
+                st.success(f"{strain_s} added to seed stock!")
                 st.rerun()
-
+                
 elif page == "Feeding Schedule":
     st.title("Feeding Schedule")
 
