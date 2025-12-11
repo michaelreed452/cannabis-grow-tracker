@@ -332,27 +332,24 @@ elif page == "Income":
             st.session_state.income = pd.concat([st.session_state.income, new], ignore_index=True)
             st.rerun()
 
-elif page == "Seed & Clone Stock":
-    st.title("Seed & Clone Stock")
+elif page == "Seed Stock":
+    st.title("Seed Stock")
     t1, t2 = st.tabs(["View", "Add Stock"])
 
     with t1:
         if len(st.session_state.stock) > 0:
             df = st.session_state.stock.copy()
-            df["Cost/Unit"] = df["Pack Cost (ZAR)"] / df["Seeds/Clones Left"].replace(0, 1)
-            df = df[["Strain", "Type", "Seeds/Clones Left", "Pack Cost (ZAR)", "Cost/Unit"]]
+            df["Cost/Unit"] = df["Pack Cost (ZAR)"] / df["Seeds Left"].replace(0, 1)
+            df = df[["Strain", "Seeds Left", "Pack Cost (ZAR)", "Cost/Unit"]]
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
             st.info("No stock recorded")
 
     with t2:
-        c1, c2, c3 = st.columns(3)
+        c1, c2 = st.columns(3) 
         with c1:
-            strain_s = st.text_input("Strain *")
-            stock_type = st.selectbox("Type", ["Seed", "Clone"])
+            left = st.number_input("Seeds Left", min_value=0, step=1)
         with c2:
-            left = st.number_input("Seeds/Clones Left", min_value=0, step=1)
-        with c3:
             cost_s = st.number_input("Pack Cost (ZAR)", min_value=0.0, step=0.01)
 
         if st.button("Add Stock", type="primary"):
@@ -362,8 +359,7 @@ elif page == "Seed & Clone Stock":
                 new = pd.DataFrame([{
                     "Strain": strain_s,
                     "Breeder": "",
-                    "Type": stock_type,
-                    "Seeds/Clones Left": left,
+                    "Seeds Left": left,
                     "Pack Cost (ZAR)": cost_s
                 }])
                 st.session_state.stock = pd.concat([st.session_state.stock, new], ignore_index=True)
