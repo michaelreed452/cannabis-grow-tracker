@@ -23,7 +23,7 @@ if st.session_state.user is None:
         # ← add as many users as you want here
         valid_users = {
             "Michael": "KATVIS",
-            "Fanie":   "GhostOG420", 
+            "Fanie":   "Zgtr2gn8Q4JteNa", 
             # add more lines like this ↓
             # "sarah":   "herpassword",
         }
