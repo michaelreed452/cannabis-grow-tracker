@@ -71,6 +71,10 @@ def initialize_session_state():
         st.session_state.stock = pd.DataFrame(columns=[
             'Strain', 'Breeder', 'Seeds Left', 'Pack Cost (ZAR)'
         ])
+        if 'feeding' not in st.session_state:
+        st.session_state.stock = pd.DataFrame(columns=[
+            'Date', 'Plant(s)', 'Nutrients', 'Amount', Notes'
+        ])
 
 initialize_session_state()
 
